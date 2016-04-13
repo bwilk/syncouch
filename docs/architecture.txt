@@ -1,0 +1,52 @@
+- changes handler
+- changes handler manager service
+- tranformation service
+- rest interface 
+	
+Changes handler manager service:
+- starts changes handlers
+- stops changes handlers
+- manages handlers configuration - adds new source/target databases to the pool 
+- receives requests through REST interface
+
+Changes handler:
+- requests for changes, issues transformation and creates/updates/deletes documents
+- service is configurable - it can be told which documents to synchronize
+- two jobs (threads) - whitelist job, blacklist job 
+	- whitelist job works like that:
+		- gets changes
+		- it moves "since" marker 
+		- if doc id is on a blacklist it omits a document 
+		- it processes changes 
+		- when it fails to process document it stores it on a blacklist  first and last doc revision on a blacklist 
+	- blacklist job 	
+		- first revision is used in order to restart processing changes on a document from a certain point 
+		- it requests exactly one (the oldest revision) change of a document and tries to process it 
+		- last revision is used to remove document from blacklist when all of queuing changes have been processed - last == first 
+ 	- there is special filter for doc ids "?filter=_doc_ids" and "?limit=..." parameters which can be used to process blacklist
+ 	- this mechanism suggests that service must be stateful - state must be available on failure
+- schema changes have to be treated differently than document changes
+	- service stops synchronization when schema changes 
+
+Transformation service:
+- build on top of transformation module
+- is managed by REST interface 
+- remark: there is also a need for a connection between spec version and source schema version - hence the need for 	
+
+Tranformation module:
+- simple jolt based component used to perform transformation 
+- manages jolt transformation spec
+- is stateful - stores specs and uses speciffic spec version to perform each transformation
+
+REST interface:
+- manages transformation service and  
+
+Remarks:
+- services are stateless
+- changes handler jobs and transformation module are logically connected - they manage a single database to database synchronization process
+- so a source-target pair (better name needed here) have two polling jobs (blacklist + whitelist threads), and uses single transformation module state
+- REST operates directly 
+    
+
+Names:
+- SourceUpdatesProcessing - for changes handler 
