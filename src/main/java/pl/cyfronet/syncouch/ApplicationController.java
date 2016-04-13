@@ -13,32 +13,33 @@ import pl.cyfronet.syncouch.changes.ChangesProcessing;
 @EnableAutoConfiguration
 public class ApplicationController {
 
-	// TODO eventually changes processing management service schould be used here but for now following design will suffice    
+	// TODO eventually changes processing management service schould be used
+	// here but for now following design will suffice
 	ChangesProcessing changesProcessing = new ChangesProcessing();
-	
+
 	@RequestMapping("/")
-    String home(HttpSession httpSession) {
-        return "Hello! I am SynCouch!";
-    }
-	
+	String home(HttpSession httpSession) {
+		return "Hello! I am SynCouch!";
+	}
+
 	@RequestMapping("/start")
-    String start(HttpSession httpSession) {
+	String start(HttpSession httpSession) {
 		changesProcessing.start();
-        return "Synchronization started";
-    }
-	
+		return "Synchronization started";
+	}
+
 	@RequestMapping("/stop")
-    String stop(HttpSession httpSession) {
+	String stop(HttpSession httpSession) {
 		try {
 			changesProcessing.stop();
 		} catch (InterruptedException e) {
 			return "Synchronization finished with error";
 		}
-        return "Synchronization finished";
-    }
+		return "Synchronization finished";
+	}
 
-    public static void main(String[] args) throws Exception {
-        SpringApplication.run(ApplicationController.class, args);
-    }
+	public static void main(String[] args) throws Exception {
+		SpringApplication.run(ApplicationController.class, args);
+	}
 
 }
