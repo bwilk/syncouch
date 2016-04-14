@@ -1,10 +1,15 @@
 package pl.cyfronet.syncouch.changes;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class BlacklistProcessor implements Runnable {
 
+	private final Logger logger = LoggerFactory.getLogger(BlacklistProcessor.class);
+	
 	@Override
 	public void run() {
-		System.out.println("Starting blacklist processing");
+		logger.debug("Blacklist processor started");
 		while (true) {
 			try {
 				if (Thread.interrupted()) {
@@ -12,7 +17,7 @@ public class BlacklistProcessor implements Runnable {
 			    }
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
-				System.out.println("Stopping blacklist processing");
+				logger.debug("Blacklist processor finished");
 				return;
 			}
 		}

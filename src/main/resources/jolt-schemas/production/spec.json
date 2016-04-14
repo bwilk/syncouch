@@ -1,5 +1,16 @@
-[
+[{
+    "operation": "remove",
+    "spec": {
+      "_id": "",
+      "_rev": ""
+    }
+  },
   {
-    "operation": "sort"
+    "operation": "shift",
+    "spec": {
+      "*": {
+        "$": "keys[]"
+      }
+    }
   }
 ]

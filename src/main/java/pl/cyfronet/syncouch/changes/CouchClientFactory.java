@@ -3,7 +3,7 @@ package pl.cyfronet.syncouch.changes;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbProperties;
 
-public class CouchClient {
+public class CouchClientFactory {
 
 	private CouchDbClient sourceDbClient;
 	private CouchDbClient targetDbClient;

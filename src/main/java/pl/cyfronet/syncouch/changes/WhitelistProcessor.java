@@ -4,30 +4,40 @@ import org.lightcouch.Changes;
 import org.lightcouch.ChangesResult;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonObject;
 
 public class WhitelistProcessor implements Runnable {
 
-	private CouchClient connectionManager;
+	private final Logger logger = LoggerFactory.getLogger(WhitelistProcessor.class);
+	
+	private CouchClientFactory connectionManager;
 	private DocChangeHandler documentHandler;
 	
+	private String sinceMarker;
+	
 	public WhitelistProcessor() {
-		connectionManager = new CouchClient();
+		connectionManager = new CouchClientFactory();
+		sinceMarker = Integer.toString(0);
 	}
 	
 	@Override
 	public void run() {
-		System.out.println("Starting whitelist processing");
-		documentHandler = new DocChangeHandler(connectionManager.targetDbClient());
+		logger.debug("Whitelist processor started");
+		
+		documentHandler = new DocChangeHandler(connectionManager.targetDbClient());		
 		
 		CouchDbClient dbClient = connectionManager.sourceDbClient();
 		CouchDbInfo dbInfo = dbClient.context().info();
 		
-		String since = dbInfo.getUpdateSeq();
+		String since = sinceMarker == null ? dbInfo.getUpdateSeq() : sinceMarker;
+		
 		Changes changes = dbClient.changes().includeDocs(true).since(since)
 				.timeout(1000).heartBeat(30000).continuousChanges();
-		while (changes.hasNext()) {
+		
+		while (!Thread.interrupted() && changes.hasNext()) {
 			ChangesResult.Row feed = changes.next();
 			String docId = feed.getId();
 			JsonObject doc = feed.getDoc();
@@ -40,16 +50,9 @@ public class WhitelistProcessor implements Runnable {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			if (Thread.interrupted()) {
-				shutdown();
-		        return;
-		    }
 		}
-		shutdown();
-	}
-	
-	private void shutdown() {
-		System.out.println("Stopping whitelist processing");
+
+		logger.debug("Whitelist processor finished");
 	}
 	
 }
