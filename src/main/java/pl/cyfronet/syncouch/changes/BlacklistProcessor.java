@@ -27,20 +27,20 @@ public class BlacklistProcessor implements Runnable {
 
 	@Override
 	public void run() {
+		logger.debug("Blacklist processor started");
 		try {
-			logger.debug("Blacklist processor started");
-			
 			DocChangeHandler documentHandler = new JoltChangeHandler(connectionManager.targetDbClient());
 			CouchDbClient dbClient = connectionManager.sourceDbClient();
 			
 			while (!Thread.interrupted()) {
 				Map<String, Integer> docsToBeHandled = blacklist.docsToBeHandled();
-				logger.debug("blacklist processing started - blacklist {}", docsToBeHandled.keySet());
+				logger.debug("blacklist processing in progress - blacklist: {}", docsToBeHandled.keySet());
 				for (String docId : docsToBeHandled.keySet()) {
-					logger.debug("doc {} form blacklist is going to be handled", docId);
+					Integer seq = docsToBeHandled.get(docId);
+					logger.debug("doc {} change {} - attempting to handle again", docId, seq);
 					try {
 						String filter = String.format("_doc_ids&doc_ids=[\"%s\"]", docId);
-						String since = Integer.toString(docsToBeHandled.get(docId) - 1); 
+						String since = Integer.toString(seq - 1); 
 						/*
 						 * The above is strange but couchdb works like that
 						 */
@@ -57,16 +57,16 @@ public class BlacklistProcessor implements Runnable {
 								documentHandler.handleDocChange(docId, doc);
 							}
 							blacklist.docHandled(docId);
-							logger.debug("doc {} from blacklist handled {}", docId, doc);
+							logger.debug("doc {} handled {}", docId, doc);
 						} catch (DocChangesHandlerException e) {
-							logger.debug("doc {} from blacklist cannot be handled {}", docId, doc);
+							logger.debug("doc {} cannot be handled", docId, e);
 						}
 					} catch (Exception e) {
-						logger.warn("error occured when handling doc {} ", docId);
+						logger.warn("doc {} cannot be handled - unexpected error", docId, e);
 					}
 				}
 				logger.debug("blacklist processing finished, waiting {}s "
-						+ "- blacklist {}", STEP_DELAY / 1000, blacklist.docsToBeHandled().keySet());
+						+ "- blacklist: {}", STEP_DELAY / 1000, blacklist.docsToBeHandled().keySet());
 				try {
 					Thread.sleep(STEP_DELAY);
 				} catch (InterruptedException e) {
@@ -75,7 +75,7 @@ public class BlacklistProcessor implements Runnable {
 			}
 			logger.debug("Blacklist processor finished successfully");
 		} catch (Exception e) {
-			logger.error("Unexpected exception - blacklist processor is dead {}", e);
+			logger.error("Unexpected exception - blacklist processor is dead", e);
 		}
 	}
 

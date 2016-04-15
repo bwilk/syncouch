@@ -26,25 +26,25 @@ public class WhitelistProcessor implements Runnable {
 	
 	@Override
 	public void run() {
+		logger.debug("Whitelist processor started");
 		try {
-			logger.debug("Whitelist processor started");
-
 			DocChangeHandler documentHandler = new FakeChangesHandler(connectionManager.targetDbClient());		
 			CouchDbClient dbClient = connectionManager.sourceDbClient();
 			CouchDbInfo dbInfo = dbClient.context().info();
-			
+
 			Integer since = (sinceMarker == null ? Integer.parseInt(dbInfo.getUpdateSeq()) : sinceMarker) - 1;
 			/*
 			 * The above is strange but couchdb works like that
 			 */
 			Changes changes = dbClient.changes().includeDocs(true).since(since.toString())
 					.timeout(1000).heartBeat(30000).continuousChanges();
-			
+
 			while (!Thread.interrupted() && changes.hasNext()) {
 				ChangesResult.Row feed = changes.next();
 				String docId = feed.getId();
+				logger.debug("doc {} change encountered", docId);
 				if (blacklist.contains(docId)) {
-					logger.debug("doc {} change encountered but it is present on blacklist - updating seq", docId);
+					logger.debug("doc {} is on the blacklist - updating seq", docId);
 					blacklist.update(docId, feed.getSeq()); 
 				} else {
 					JsonObject doc = feed.getDoc();
@@ -54,15 +54,16 @@ public class WhitelistProcessor implements Runnable {
 						} else {
 							documentHandler.handleDocChange(docId, doc);
 						}
+						logger.debug("doc {} change handled ", docId);
 					} catch (DocChangesHandlerException e) {
-						logger.debug("doc {} not handled properly - will be added to blacklist", docId);
+						logger.debug("doc {} cannot be handled - updating blacklist", docId, e);
 						blacklist.update(docId, feed.getSeq()); 
 					}
 				}
 			}
-			logger.debug("Whitelist processor finished");
+			logger.debug("Whitelist processor finished successfully");
 		} catch (Exception e) {
-			logger.debug("Unexpected exception - whitelist processor is dead {}", e);
+			logger.debug("Unexpected error - whitelist processor is dead", e);
 		}
 	}
 	
