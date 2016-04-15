@@ -29,7 +29,6 @@ public class BlacklistProcessor implements Runnable {
 	public void run() {
 		logger.debug("Blacklist processor started");
 		try {
-			DocChangeHandler documentHandler = new JoltChangeHandler(connectionManager.targetDbClient());
 			CouchDbClient dbClient = connectionManager.sourceDbClient();
 			
 			while (!Thread.interrupted()) {
@@ -38,7 +37,8 @@ public class BlacklistProcessor implements Runnable {
 				for (String docId : docsToBeHandled.keySet()) {
 					Integer seq = docsToBeHandled.get(docId);
 					logger.debug("doc {} change {} - attempting to handle again", docId, seq);
-					try {
+					try {					
+						DocChangeHandler documentHandler = new JoltChangesHandler(connectionManager.targetDbClient());
 						String filter = String.format("_doc_ids&doc_ids=[\"%s\"]", docId);
 						String since = Integer.toString(seq - 1); 
 						/*
@@ -57,9 +57,9 @@ public class BlacklistProcessor implements Runnable {
 								documentHandler.handleDocChange(docId, doc);
 							}
 							blacklist.docHandled(docId);
-							logger.debug("doc {} handled {}", docId, doc);
+							logger.debug("doc {} change {} handled", docId, seq);
 						} catch (DocChangesHandlerException e) {
-							logger.debug("doc {} cannot be handled", docId, e);
+							logger.debug("doc {} change {} cannot be handled", docId, seq, e);
 						}
 					} catch (Exception e) {
 						logger.warn("doc {} cannot be handled - unexpected error", docId, e);

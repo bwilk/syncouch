@@ -28,7 +28,6 @@ public class WhitelistProcessor implements Runnable {
 	public void run() {
 		logger.debug("Whitelist processor started");
 		try {
-			DocChangeHandler documentHandler = new FakeChangesHandler(connectionManager.targetDbClient());		
 			CouchDbClient dbClient = connectionManager.sourceDbClient();
 			CouchDbInfo dbInfo = dbClient.context().info();
 
@@ -42,23 +41,25 @@ public class WhitelistProcessor implements Runnable {
 			while (!Thread.interrupted() && changes.hasNext()) {
 				ChangesResult.Row feed = changes.next();
 				String docId = feed.getId();
-				logger.debug("doc {} change encountered", docId);
+				String seq = feed.getSeq();
+				logger.debug("doc {} change {} encountered", docId, seq);
 				if (blacklist.contains(docId)) {
-					logger.debug("doc {} is on the blacklist - updating seq", docId);
-					blacklist.update(docId, feed.getSeq()); 
+					logger.debug("doc {} is on the blacklist - updating seq to {}", docId, seq);
+					blacklist.update(docId, seq); 
 				} else {
 					JsonObject doc = feed.getDoc();
 					try {
+						DocChangeHandler documentHandler = new JoltChangesHandler(connectionManager.targetDbClient());
 						if (feed.isDeleted()) {
 							documentHandler.handleDocDelete(docId); 
 						} else {
 							documentHandler.handleDocChange(docId, doc);
 						}
-						logger.debug("doc {} change handled ", docId);
-					} catch (DocChangesHandlerException e) {
-						logger.debug("doc {} cannot be handled - updating blacklist", docId, e);
+						logger.debug("doc {} change {} handled ", docId, seq);
+					} catch (Exception e) {
+						logger.debug("doc {} change {} cannot be handled - updating blacklist", docId, seq, e);
 						blacklist.update(docId, feed.getSeq()); 
-					}
+					} 
 				}
 			}
 			logger.debug("Whitelist processor finished successfully");

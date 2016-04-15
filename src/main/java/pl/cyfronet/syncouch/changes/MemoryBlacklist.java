@@ -25,10 +25,10 @@ public class MemoryBlacklist implements Blacklist {
 			BlacklistEntry blacklistEntry = map.get(docId);
 			if (blacklistEntry == null) {
 				map.put(docId, blacklistEntry = new BlacklistEntry(docId, seqInt, seqInt));
-				logger.debug("doc {} added - firstSeq, {}, lastSeq: {} ", docId, blacklistEntry.firstSeq, blacklistEntry.lastSeq);
+				logger.debug("doc {} added - firstSeq: {}, lastSeq: {} ", docId, blacklistEntry.firstSeq, blacklistEntry.lastSeq);
 			} else {
 				blacklistEntry.lastSeq = seqInt;
-				logger.debug("doc {} updated - firstSeq, {}, lastSeq: {} ",docId, blacklistEntry.firstSeq, blacklistEntry.lastSeq);
+				logger.debug("doc {} updated - firstSeq: {}, lastSeq: {} ",docId, blacklistEntry.firstSeq, blacklistEntry.lastSeq);
 			}
 		}
 	}

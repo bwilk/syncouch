@@ -4,7 +4,7 @@ import org.lightcouch.CouchDbClient;
 
 import com.google.gson.JsonObject;
 
-public class FakeChangesHandler extends JoltChangeHandler implements DocChangeHandler {
+public class FakeChangesHandler extends JoltChangesHandler implements DocChangeHandler {
 
 	public FakeChangesHandler(CouchDbClient targetDbClient) {
 		super(targetDbClient);

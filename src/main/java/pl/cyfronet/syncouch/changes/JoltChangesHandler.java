@@ -11,15 +11,15 @@ import pl.cyfronet.syncouch.transform.JoltTransformation;
 
 import com.google.gson.JsonObject;
 
-public class JoltChangeHandler implements DocChangeHandler {
+public class JoltChangesHandler implements DocChangeHandler {
 
 	private final Logger logger = LoggerFactory
-			.getLogger(JoltChangeHandler.class);
+			.getLogger(JoltChangesHandler.class);
 
 	private CouchDbClient targetDbClient;
 	private JoltTransformation jolt;
 
-	public JoltChangeHandler(CouchDbClient targetDbClient) {
+	public JoltChangesHandler(CouchDbClient targetDbClient) {
 		this.targetDbClient = targetDbClient;
 		this.jolt = new JoltTransformation();
 	}
