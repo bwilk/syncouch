@@ -16,9 +16,11 @@ public class ChangesProcessing {
 	public void start() {
 		if (executor == null) {
 			logger.info("Starting changes processing");
+			Blacklist blacklist = new MemoryBlacklist(); 
+			CouchClientFactory clientFactory = new CouchClientFactory();
 			executor = Executors.newFixedThreadPool(2);
-			executor.submit(new WhitelistProcessor());
-			executor.submit(new BlacklistProcessor());
+			executor.submit(new WhitelistProcessor(blacklist, clientFactory));
+			executor.submit(new BlacklistProcessor(blacklist, clientFactory));
 		}
 	}
 	
