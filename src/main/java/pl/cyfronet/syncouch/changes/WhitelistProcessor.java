@@ -28,12 +28,15 @@ public class WhitelistProcessor implements Runnable {
 	public void run() {
 		try {
 			logger.debug("Whitelist processor started");
-			
+
 			DocChangeHandler documentHandler = new FakeChangesHandler(connectionManager.targetDbClient());		
 			CouchDbClient dbClient = connectionManager.sourceDbClient();
 			CouchDbInfo dbInfo = dbClient.context().info();
 			
-			Integer since = (sinceMarker == null ? Integer.parseInt(dbInfo.getUpdateSeq()) : sinceMarker) - 1;			
+			Integer since = (sinceMarker == null ? Integer.parseInt(dbInfo.getUpdateSeq()) : sinceMarker) - 1;
+			/*
+			 * The above is strange but couchdb works like that
+			 */
 			Changes changes = dbClient.changes().includeDocs(true).since(since.toString())
 					.timeout(1000).heartBeat(30000).continuousChanges();
 			
@@ -59,7 +62,7 @@ public class WhitelistProcessor implements Runnable {
 			}
 			logger.debug("Whitelist processor finished");
 		} catch (Exception e) {
-			logger.debug("Unexpected exception {}", e);
+			logger.debug("Unexpected exception - whitelist processor is dead {}", e);
 		}
 	}
 	
